@@ -1,0 +1,47 @@
+# Enterprise Retrieval-Augmented Generation (RAG) Architecture and Chunking Strategy Guide
+
+## 1. Executive Summary and Problem Formulation
+Retrieval-Augmented Generation (RAG) grounds Large Language Models (LLMs) in verifiable enterprise data. In modern enterprise RAG architectures, raw unstructured documents must be segmented into discrete information payloads termed "chunks" prior to vector embedding generation. The choice of chunking strategy directly governs retrieval precision, context dilution, indexing throughput, and inference expenditure.
+
+Document segmentation is not merely an engineering pre-processing step; it is the fundamental resolution dial of the vector search space. A chunk that is too granular loses thematic coherence and conversational context, producing high semantic variance. Conversely, a chunk that is overly expansive dilutes specific factual needles in vast haystacks of irrelevant text, ballooning context window token counts and generating hallucinated synthesis.
+
+## 2. Fixed-Size Chunking: Mechanics, Overlap, and Boundary Effects
+Fixed-size chunking partitions incoming textual streams into strict, predetermined spans of characters or tokens regardless of linguistic or syntactic structure. For example, a standard configuration sets chunk_size to 500 characters with a chunk_overlap of 50 characters.
+
+The chief mechanical advantage of fixed-size partitioning is deterministic computational complexity: string splitting executes in O(N) linear time with minimal memory overhead. However, fixed-size chunking suffers from arbitrary boundary truncation. Sentences, semantic clauses, and tabular records are regularly sliced in half. Chunk overlap (typically configured between 10% and 20%) acts as a palliative buffer to prevent catastrophic term bifurcation at the edges, but redundancy increases the total number of vectors indexed by approximately 15% to 25%.
+
+## 3. Recursive Character Splitting: Hierarchical Delimiters
+Recursive character text splitting overcomes arbitrary truncation by traversing a prioritized list of structural delimiters. The canonical hierarchy begins with double newlines ("\n\n") to preserve paragraphs, falls back to single newlines ("\n") for itemized lists and line breaks, progresses to sentence punctuation (". "), and terminates with whitespace (" ") or empty character strings.
+
+The recursive algorithm iteratively tests whether the segment resulting from a primary split fits within the target token quota. If an individual block exceeds the quota, the splitter descends to the next delimiter in the cascade. By prioritizing macro-structural demarcations before sentence or word boundaries, recursive chunking maintains logical thematic units while enforcing strict upper-bound context sizes. In enterprise benchmark suites, recursive splitting demonstrates an average 18% improvement in retrieval hit-rate over naive fixed-size splitting.
+
+## 4. Sentence-Level Windowing and Grammatical Cohesion
+Sentence chunking leverages natural language tokenization to preserve grammatical units. Sentences are never truncated mid-clause. An operational sentence chunker groups N consecutive sentences (for example, 3 sentences per chunk) with a sliding overlap of M sentences (for example, 1 sentence overlap).
+
+Grammatical cohesion ensures that coreferential anchors (such as pronouns like "it", "they", or "this architecture") remain paired with their immediate antecedent noun phrases. The primary failure mode of simple sentence windowing is high variance in chunk byte size: a chunk composed of three terse bullet points may contain only 120 characters, whereas three complex academic sentences can exceed 1,400 characters. To mitigate this discrepancy, modern sentence splitters enforce secondary max_chunk_size constraints.
+
+## 5. Semantic Chunking: Embedding Gradient Breakpoints
+Semantic chunking dynamically determines split locations by measuring semantic similarity drops between consecutive sentences. Rather than relying on arbitrary character quotas or static grammatical counts, semantic segmentation calculates the cosine distance between the dense vector representations of sentence S_i and sentence S_(i+1).
+
+When the cosine similarity drops below a predetermined statistical cutoff—such as the 75th percentile of all adjacent distance deltas or a fixed similarity threshold of 0.65—the algorithm establishes a chunk boundary. Sentences exhibiting high conceptual affinity are pooled together, while sudden topical shifts trigger segmentation. The primary trade-off of semantic chunking is computational cost: pre-computing embeddings for every individual sentence incurs significant initial indexing latency, often requiring 4x to 8x the compute of rule-based splitters.
+
+## 6. Hierarchical Parent-Child Chunking: Search vs. Context Decoupling
+Hierarchical parent-child chunking resolves the fundamental trade-off between search specificity and synthesis context. In standard flat RAG pipelines, the exact text chunk retrieved by vector similarity is forwarded directly to the LLM prompt. This forces engineers to compromise: small chunks optimize vector search precision, whereas large chunks provide necessary context for answer generation.
+
+Parent-child chunking decouples these two concerns. The document is first segmented into expansive "Parent" chunks (e.g., 1,200 characters or 300 tokens) that encapsulate comprehensive explanations. Each parent is subsequently subdivided into multiple compact "Child" chunks (e.g., 250 characters or 60 tokens). Only the child chunks are embedded and indexed in the vector database. When a query matches a child chunk during vector search, the retriever looks up the child's parent_id metadata and injects the parent's full context into the LLM prompt. This guarantees pinpoint search accuracy while eliminating context starvation.
+
+## 7. Vector Indexing, Distance Metrics, and Cosine Normalization
+All chunking strategies feed into a vector index where similarity is evaluated using distance functions. For dense neural representations, Cosine Similarity measures the angle between vectors independent of magnitude:
+Cosine Similarity = (A · B) / (||A|| * ||B||)
+
+When embeddings are unit L2-normalized during encoding (||A|| = 1 and ||B|| = 1), cosine similarity reduces to a fast dot product (A · B). This enables rapid ranking across thousands of chunks using BLAS matrix multiplication. Top-K retrieval selects the K highest scoring candidates according to this metric.
+
+## 8. Latency SLA, Retrieval Metrics, and Cost Economics
+Enterprise production SLAs require careful tracking of retrieval effectiveness and financial expense. Retrieval quality is rigorously evaluated using two gold-standard metrics:
+- Recall@K (Hit Rate@K): The fraction of queries for which at least one of the top K retrieved passages contains the ground-truth answer.
+- Mean Reciprocal Rank (MRR): The average of reciprocal ranks (1/rank) of the first relevant chunk returned across all evaluation queries.
+
+Cost economics are governed by two distinct components:
+1. One-time Indexing Cost: Token volume embedded during document ingestion (e.g., $0.02 per 1,000,000 tokens for standard embedding models).
+2. Recurring Query Context Cost: Total tokens retrieved and injected into downstream LLM prompts for every user interaction (e.g., $0.15 per 1,000,000 tokens for lightweight frontier models).
+Parent-child chunking increases retrieved context token counts relative to small flat chunks, but often achieves superior MRR and eliminates answer truncation in multi-hop question answering.

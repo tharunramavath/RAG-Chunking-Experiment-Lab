@@ -1,0 +1,112 @@
+[
+  {
+    "id": "q1",
+    "question": "What is the primary mechanical advantage of fixed-size partitioning?",
+    "ground_truth_answers": [
+      "linear time",
+      "O(N) linear time",
+      "deterministic computational complexity"
+    ],
+    "relevant_keywords": ["fixed-size", "linear time", "complexity"],
+    "expected_section": "2. Fixed-Size Chunking"
+  },
+  {
+    "id": "q2",
+    "question": "By how much does chunk overlap typically increase the total number of indexed vectors?",
+    "ground_truth_answers": [
+      "15% to 25%",
+      "15% to 25 percent",
+      "approximately 15% to 25%"
+    ],
+    "relevant_keywords": ["overlap", "15%", "25%"],
+    "expected_section": "2. Fixed-Size Chunking"
+  },
+  {
+    "id": "q3",
+    "question": "What is the canonical hierarchy of structural delimiters traversed in recursive text splitting?",
+    "ground_truth_answers": [
+      "\\n\\n",
+      "double newlines",
+      "single newlines"
+    ],
+    "relevant_keywords": ["delimiter", "double newlines", "hierarchy"],
+    "expected_section": "3. Recursive Character Splitting"
+  },
+  {
+    "id": "q4",
+    "question": "What percentage improvement in retrieval hit-rate did recursive splitting demonstrate over fixed-size splitting?",
+    "ground_truth_answers": [
+      "18%",
+      "18 percent",
+      "average 18% improvement"
+    ],
+    "relevant_keywords": ["18%", "improvement", "hit-rate"],
+    "expected_section": "3. Recursive Character Splitting"
+  },
+  {
+    "id": "q5",
+    "question": "What is the primary failure mode of simple sentence windowing?",
+    "ground_truth_answers": [
+      "high variance in chunk byte size",
+      "variance in chunk byte size",
+      "chunk byte size"
+    ],
+    "relevant_keywords": ["failure mode", "variance", "byte size"],
+    "expected_section": "4. Sentence-Level Windowing"
+  },
+  {
+    "id": "q6",
+    "question": "How does semantic chunking determine where to establish a chunk boundary?",
+    "ground_truth_answers": [
+      "cosine similarity drops below",
+      "cosine distance between the dense vector representations",
+      "similarity drops below a predetermined statistical cutoff"
+    ],
+    "relevant_keywords": ["cosine similarity", "cutoff", "boundary"],
+    "expected_section": "5. Semantic Chunking"
+  },
+  {
+    "id": "q7",
+    "question": "How much more compute does initial indexing for semantic chunking typically require compared to rule-based splitters?",
+    "ground_truth_answers": [
+      "4x to 8x",
+      "4x to 8x the compute",
+      "4 to 8 times"
+    ],
+    "relevant_keywords": ["4x", "8x", "compute", "indexing latency"],
+    "expected_section": "5. Semantic Chunking"
+  },
+  {
+    "id": "q8",
+    "question": "In hierarchical parent-child chunking, what gets indexed in the vector database and what is injected into the LLM prompt?",
+    "ground_truth_answers": [
+      "child chunks are embedded and indexed",
+      "child chunks are embedded",
+      "parent's full context into the LLM prompt"
+    ],
+    "relevant_keywords": ["child chunks", "parent", "indexed", "prompt"],
+    "expected_section": "6. Hierarchical Parent-Child Chunking"
+  },
+  {
+    "id": "q9",
+    "question": "When vectors are unit L2-normalized, what mathematical operation does cosine similarity reduce to?",
+    "ground_truth_answers": [
+      "dot product",
+      "fast dot product",
+      "A · B"
+    ],
+    "relevant_keywords": ["dot product", "L2-normalized", "cosine similarity"],
+    "expected_section": "7. Vector Indexing"
+  },
+  {
+    "id": "q10",
+    "question": "What is the formula and definition for Mean Reciprocal Rank (MRR)?",
+    "ground_truth_answers": [
+      "1/rank",
+      "average of reciprocal ranks",
+      "first relevant chunk"
+    ],
+    "relevant_keywords": ["MRR", "1/rank", "reciprocal ranks"],
+    "expected_section": "8. Latency SLA, Retrieval Metrics"
+  }
+]
