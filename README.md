@@ -69,7 +69,11 @@ flowchart LR
 1. **Identical Embedding Model**: All chunks across all compared strategies are embedded using the exact same model (`all-MiniLM-L6-v2` dense neural or `tfidf-dense-local` deterministic).
 2. **Identical Dataset**: All strategies operate over the exact same text stream.
 3. **Identical Retrieval Metric**: Exact cosine similarity with unit L2 normalization:
-   $$\text{Cosine Similarity} = \frac{A \cdot B}{\|A\| \|B\|} = A \cdot B$$
+
+   $$
+   \text{Cosine Similarity}(A, B) = \frac{A \cdot B}{\|A\| \|B\|} = A \cdot B
+   $$
+
 4. **Identical Top-K**: The number of retrieved context items ($K$) is fixed across all strategies (e.g. $K=3$).
 
 ---
@@ -91,23 +95,47 @@ flowchart LR
 This lab strictly distinguishes between **MEASURED** runtime values and **ESTIMATED** formula-based financial costs:
 
 ### 1. Strictly Measured Metrics (Empirical)
-- **Recall@K (Hit Rate@K)**: Proportion of queries where at least one retrieved chunk in Top-$K$ contains the ground-truth target.
-  $$\text{Recall@K} = \frac{1}{|Q|} \sum_{q \in Q} \mathbb{I}(\text{hit in top-}K)$$
-- **Mean Reciprocal Rank (MRR)**: Average reciprocal rank of the first relevant chunk returned across queries ($1/\text{rank}_1$ or $0$ if no hit in Top-$K$).
-  $$\text{MRR} = \frac{1}{|Q|} \sum_{q \in Q} \frac{1}{\text{rank}_1(q)}$$
-- **Precision@K**: Average proportion of retrieved chunks in Top-$K$ that contain ground-truth evidence.
+
+- **Recall@K (Hit Rate@K)**: Proportion of queries where at least one retrieved chunk in Top-$K$ contains the ground-truth target:
+
+  $$
+  \text{Recall@}K = \frac{1}{|Q|} \sum_{q \in Q} \mathbf{1}(\text{hit in top-}K)
+  $$
+
+- **Mean Reciprocal Rank (MRR)**: Average reciprocal rank of the first relevant chunk returned across queries ($1/\text{rank}_1$, or $0$ if no hit in Top-$K$):
+
+  $$
+  \text{MRR} = \frac{1}{|Q|} \sum_{q \in Q} \frac{1}{\text{rank}_1(q)}
+  $$
+
+- **Precision@K**: Average proportion of retrieved chunks in Top-$K$ that contain ground-truth evidence:
+
+  $$
+  \text{Precision@}K = \frac{1}{|Q|} \sum_{q \in Q} \frac{\text{Relevant Chunks in Top-}K}{K}
+  $$
+
 - **Context Token Count**: Total number of tokens injected into the LLM context across queries (measured via `tiktoken` `cl100k_base`).
 - **Chunking Latency (ms)**: Wall-clock time to segment the document.
 - **Indexing Latency (ms)**: Wall-clock time to generate embeddings and build the vector index.
 - **Mean Retrieval Latency (ms)**: Average cosine similarity search latency per query.
 
 ### 2. Estimated Metrics (Cost Modeling)
-- **Estimated Embedding Ingestion Cost (\$ USD)**:
-  $$\text{Cost}_{\text{embed}} = \left( \frac{\text{Total Embedded Tokens}}{1,000,000} \right) \times \text{Rate}_{\text{embed}}$$
-  *(Default rate: \$0.02 / 1M tokens based on standard `text-embedding-3-small` tier)*
-- **Estimated Context Window LLM Prompt Cost (\$ USD)**:
-  $$\text{Cost}_{\text{context}} = \left( \frac{\text{Total Retrieved Context Tokens}}{1,000,000} \right) \times \text{Rate}_{\text{context}}$$
-  *(Default rate: \$0.15 / 1M tokens based on lightweight frontier models such as GPT-4o-mini / Gemini Flash)*
+
+- **Estimated Embedding Ingestion Cost ($ USD)**:
+
+  $$
+  \text{Cost}_{\text{embed}} = \left( \frac{\text{Total Embedded Tokens}}{1{,}000{,}000} \right) \times \text{Rate}_{\text{embed}}
+  $$
+
+  *(Default rate: $0.02 / 1M tokens based on standard `text-embedding-3-small` tier)*
+
+- **Estimated Context Window LLM Prompt Cost ($ USD)**:
+
+  $$
+  \text{Cost}_{\text{context}} = \left( \frac{\text{Total Retrieved Context Tokens}}{1{,}000{,}000} \right) \times \text{Rate}_{\text{context}}
+  $$
+
+  *(Default rate: $0.15 / 1M tokens based on lightweight frontier models such as GPT-4o-mini / Gemini Flash)*
 
 ---
 
