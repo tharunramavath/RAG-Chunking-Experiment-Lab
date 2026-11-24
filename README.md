@@ -70,9 +70,9 @@ flowchart LR
 2. **Identical Dataset**: All strategies operate over the exact same text stream.
 3. **Identical Retrieval Metric**: Exact cosine similarity with unit L2 normalization:
 
-   $$
-   \text{Cosine Similarity}(A, B) = \frac{A \cdot B}{\|A\| \|B\|} = A \cdot B
-   $$
+$$
+\text{Cosine Similarity}(A, B) = \frac{A \cdot B}{\|A\|_2 \, \|B\|_2} = A \cdot B
+$$
 
 4. **Identical Top-K**: The number of retrieved context items ($K$) is fixed across all strategies (e.g. $K=3$).
 
@@ -96,46 +96,62 @@ This lab strictly distinguishes between **MEASURED** runtime values and **ESTIMA
 
 ### 1. Strictly Measured Metrics (Empirical)
 
-- **Recall@K (Hit Rate@K)**: Proportion of queries where at least one retrieved chunk in Top-$K$ contains the ground-truth target:
+#### • Recall@K (Hit Rate@K)
+Proportion of queries where at least one retrieved chunk in Top-K contains the ground-truth target.
 
-  $$
-  \text{Recall@}K = \frac{1}{|Q|} \sum_{q \in Q} \mathbf{1}(\text{hit in top-}K)
-  $$
+$$
+\text{Recall}(K) = \frac{1}{|Q|} \sum_{q \in Q} \mathbf{1}(\text{hit in top-}K)
+$$
 
-- **Mean Reciprocal Rank (MRR)**: Average reciprocal rank of the first relevant chunk returned across queries ($1/\text{rank}_1$, or $0$ if no hit in Top-$K$):
+> **Formula:** `Recall@K = (Queries with Target Hit in Top-K) / Total Evaluation Queries`
 
-  $$
-  \text{MRR} = \frac{1}{|Q|} \sum_{q \in Q} \frac{1}{\text{rank}_1(q)}
-  $$
+#### • Mean Reciprocal Rank (MRR)
+Average reciprocal rank of the first relevant chunk returned across queries (1/rank, or 0 if no hit in Top-K).
 
-- **Precision@K**: Average proportion of retrieved chunks in Top-$K$ that contain ground-truth evidence:
+$$
+\text{MRR} = \frac{1}{|Q|} \sum_{q \in Q} \frac{1}{\text{rank}_1(q)}
+$$
 
-  $$
-  \text{Precision@}K = \frac{1}{|Q|} \sum_{q \in Q} \frac{\text{Relevant Chunks in Top-}K}{K}
-  $$
+> **Formula:** `MRR = (1 / |Q|) × ∑ (1 / Rank of First Relevant Chunk)`
 
-- **Context Token Count**: Total number of tokens injected into the LLM context across queries (measured via `tiktoken` `cl100k_base`).
-- **Chunking Latency (ms)**: Wall-clock time to segment the document.
+#### • Precision@K
+Average proportion of retrieved chunks in Top-K that contain ground-truth evidence.
+
+$$
+\text{Precision}(K) = \frac{1}{|Q|} \sum_{q \in Q} \frac{\text{Relevant Chunks in Top-}K}{K}
+$$
+
+> **Formula:** `Precision@K = Total Relevant Chunks in Top-K / (K × Total Queries)`
+
+#### • Context Token Count
+Total number of tokens injected into the LLM context across queries (measured via `tiktoken` `cl100k_base`).
+
+#### • Latency Metrics
+- **Chunking Latency (ms)**: Wall-clock execution time to segment the document into chunks.
 - **Indexing Latency (ms)**: Wall-clock time to generate embeddings and build the vector index.
 - **Mean Retrieval Latency (ms)**: Average cosine similarity search latency per query.
 
+---
+
 ### 2. Estimated Metrics (Cost Modeling)
 
-- **Estimated Embedding Ingestion Cost ($ USD)**:
+#### • Estimated Embedding Ingestion Cost (USD)
+One-time embedding cost based on total document tokens and evaluation query tokens:
 
-  $$
-  \text{Cost}_{\text{embed}} = \left( \frac{\text{Total Embedded Tokens}}{1{,}000{,}000} \right) \times \text{Rate}_{\text{embed}}
-  $$
+$$
+\text{Cost}_{\text{embed}} = \left( \frac{\text{Total Embedded Tokens}}{1{,}000{,}000} \right) \times \text{Rate}_{\text{embed}}
+$$
 
-  *(Default rate: $0.02 / 1M tokens based on standard `text-embedding-3-small` tier)*
+> **Pricing Assumption:** Default rate is $0.02 / 1M tokens (standard `text-embedding-3-small` tier).
 
-- **Estimated Context Window LLM Prompt Cost ($ USD)**:
+#### • Estimated Context Window LLM Prompt Cost (USD)
+Inference prompt cost from passing retrieved context tokens into downstream generative models:
 
-  $$
-  \text{Cost}_{\text{context}} = \left( \frac{\text{Total Retrieved Context Tokens}}{1{,}000{,}000} \right) \times \text{Rate}_{\text{context}}
-  $$
+$$
+\text{Cost}_{\text{context}} = \left( \frac{\text{Total Retrieved Context Tokens}}{1{,}000{,}000} \right) \times \text{Rate}_{\text{context}}
+$$
 
-  *(Default rate: $0.15 / 1M tokens based on lightweight frontier models such as GPT-4o-mini / Gemini Flash)*
+> **Pricing Assumption:** Default rate is $0.15 / 1M tokens (standard lightweight frontier model prompt tier).
 
 ---
 
